@@ -15,3 +15,6 @@ steps:
 # License
 
 The scripts and documentation in this project are released under the [MIT License](LICENSE)
+
+# TODO
+- Add option to install theos-jailed

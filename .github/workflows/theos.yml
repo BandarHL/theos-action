@@ -1,0 +1,65 @@
+name: Theos
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    
+  workflow_dispatch:
+    inputs:
+      swifttoolchain:
+        description: 'Swift toolchain'
+        required: false
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: install thoes dependencies
+        run: sudo apt-get install build-essential fakeroot libtinfo5 libz3-dev rsync curl perl unzip git
+        
+      - name: set theos env variable
+        run: echo "THEOS=./theos" >> $GITHUB_ENV
+        
+      - name: cloning Theos
+        uses: actions/checkout@v2
+        with:
+          repository: theos/theos
+          submodules: true
+          path: ${{ env.THEOS }}
+          
+      - name: install toolchain (with Swift support)
+        if: ${{ github.event.inputs.swifttoolchain }}
+        run: |
+          sudo apt install zstd
+          curl -LO https://github.com/CRKatri/llvm-project/releases/download/swift-5.3.2-RELEASE/swift-5.3.2-RELEASE-ubuntu20.04.tar.zst
+          TMP=$(mktemp -d)
+          tar -xvf swift-5.3.2-RELEASE-ubuntu20.04.tar.zst -C $TMP
+          mkdir -p $THEOS/toolchain/linux/iphone $THEOS/toolchain/swift
+          mv $TMP/swift-5.3.2-RELEASE-ubuntu20.04/* $THEOS/toolchain/linux/iphone/
+          ln -s $THEOS/toolchain/linux/iphone $THEOS/toolchain/swift
+          rm -r swift-5.3.2-RELEASE-ubuntu20.04.tar.zst $TMP
+          
+      - name: install toolchain (without Swift support)
+        if: ${{ !github.event.inputs.swifttoolchain }}
+        run: |
+          curl -LO https://github.com/sbingner/llvm-project/releases/latest/download/linux-ios-arm64e-clang-toolchain.tar.lzma
+          TMP=$(mktemp -d)
+          tar -xvf linux-ios-arm64e-clang-toolchain.tar.lzma -C $TMP
+          mkdir -p $THEOS/toolchain/linux/iphone
+          mv $TMP/ios-arm64e-clang-toolchain/* $THEOS/toolchain/linux/iphone/
+          rm -r linux-ios-arm64e-clang-toolchain.tar.lzma $TMP
+
+      - name: install iOS SDK
+        run: |
+          curl -LO https://github.com/theos/sdks/archive/master.zip
+          TMP=$(mktemp -d)
+          unzip master.zip -d $TMP
+          mv $TMP/sdks-master/*.sdk $THEOS/sdks
+          rm -r master.zip $TMP
+

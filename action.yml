@@ -1,2 +1,11 @@
 name: 'theos-action'
 description: 'Theos as GitHub Action'
+
+inputs:
+  swifttoolchain:
+    description: 'Swift toolchain'
+    required: false
+    default: false
+
+branding:
+  color: 'purple'

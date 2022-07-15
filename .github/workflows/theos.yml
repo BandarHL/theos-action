@@ -27,7 +27,7 @@ jobs:
         run: echo "THEOS=./theos" >> $GITHUB_ENV
         
       - name: cloning Theos
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: theos/theos
           submodules: true
